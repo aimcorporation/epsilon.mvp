@@ -1,37 +1,44 @@
 """
-Advanced Integrated Modules (A.I.M.) // Core Scanner Module
+Advanced Integrated Modules (A.I.M.) // Remediation Module
 Project Epsilon
 © 2026 — All rights reserved.
 """
 
-def scan_target(target_path: str) -> dict:
+def generate_remediations(findings: list) -> list:
     """
-    Unified entry point: detects if target is code or container and routes accordingly.
-    Scans Python code with Bandit or containers/images with Trivy.
-    Returns dict with findings, severity breakdown, confidence scores.
+    Generates remediation suggestions for detected findings.
+    Returns list of dicts with suggestion, confidence score, patch preview.
     """
-    result = {
-        "target": target_path,
-        "status": "scan_complete",
-        "timestamp": "2026-01-18T00:00:00Z",  # Placeholder
-        "total_findings": 0,
-        "severity_breakdown": {"HIGH": 0, "MEDIUM": 0, "LOW": 0},
-        "findings": [],
-        "remediations": []
-    }
+    remediations = []
 
-    # Placeholder: Detect code vs container
-    if target_path.endswith(".py") or target_path.endswith(".py/"):
-        # Code scan (Bandit placeholder)
-        result["total_findings"] = 2
-        result["severity_breakdown"]["MEDIUM"] = 1
-        result["severity_breakdown"]["LOW"] = 1
-        result["findings"] = [
-            {"vulnerability": "Possible hard coded password", "severity": "LOW", "confidence_score": 3},
-            {"vulnerability": "Use of exec detected", "severity": "MEDIUM", "confidence_score": 6}
-        ]
-    else:
-        # Container scan (Trivy placeholder)
-        result["total_findings"] = 0
+    for finding in findings:
+        severity = finding.get("severity", "LOW")
+        confidence = finding.get("confidence_score", 5)
 
-    return result
+        if "hard coded password" in finding["vulnerability"].lower():
+            suggestion = "Move sensitive values to environment variables or secure vault."
+            patch_preview = {
+                "before": "password = 'hardcoded_password'",
+                "after": "password = os.getenv('SECRET_PASSWORD')",
+                "instructions": "Use os.getenv() to load from environment."
+            }
+        elif "exec detected" in finding["vulnerability"].lower():
+            suggestion = "Replace exec() with ast.literal_eval() for safe literal evaluation."
+            patch_preview = {
+                "before": "result = exec(user_input)",
+                "after": "result = ast.literal_eval(user_input)",
+                "instructions": "ast.literal_eval() is safe for literals only."
+            }
+        else:
+            suggestion = "Manual review recommended."
+            patch_preview = {"before": "", "after": "", "instructions": "No auto-fix available."}
+
+        remediations.append({
+            "vulnerability": finding["vulnerability"],
+            "severity": severity,
+            "confidence_score": confidence,
+            "suggestion": suggestion,
+            "patch_preview": patch_preview
+        })
+
+    return remediations
