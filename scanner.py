@@ -4,16 +4,6 @@ Project Epsilon
 © 2026 — All rights reserved.
 """
 
-def calculate_confidence(severity: str) -> int:
-    """
-    Simple confidence score calculator (placeholder for real logic).
-    """
-    if severity == "HIGH":
-        return 8
-    if severity == "MEDIUM":
-        return 6
-    return 3
-
 def scan_target(target_path: str) -> dict:
     """
     Unified entry point: detects if target is code or container and routes accordingly.
@@ -30,6 +20,8 @@ def scan_target(target_path: str) -> dict:
         "remediations": []
     }
 
+    # TODO: Replace placeholder with real Bandit/Trivy call
+    # FIXME: Implement real confidence score calculation from CVSS/exploitability
     # Placeholder: Detect code vs container
     if target_path.endswith(".py") or target_path.endswith(".py/"):
         # Code scan (Bandit placeholder)
@@ -37,16 +29,8 @@ def scan_target(target_path: str) -> dict:
         result["severity_breakdown"]["MEDIUM"] = 1
         result["severity_breakdown"]["LOW"] = 1
         result["findings"] = [
-            {
-                "vulnerability": "Possible hard coded password",
-                "severity": "LOW",
-                "confidence_score": calculate_confidence("LOW")
-            },
-            {
-                "vulnerability": "Use of exec detected",
-                "severity": "MEDIUM",
-                "confidence_score": calculate_confidence("MEDIUM")
-            }
+            {"vulnerability": "Possible hard coded password", "severity": "LOW", "confidence_score": 3},
+            {"vulnerability": "Use of exec detected", "severity": "MEDIUM", "confidence_score": 6}
         ]
     else:
         # Container scan (Trivy placeholder)
