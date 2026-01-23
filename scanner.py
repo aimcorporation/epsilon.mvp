@@ -4,6 +4,9 @@ Project Epsilon
 © 2026 — All rights reserved.
 """
 
+import subprocess
+import json
+
 def calculate_confidence(severity: str) -> int:
     """Simple confidence score calculator (placeholder for real logic)."""
     if severity == "HIGH":
@@ -28,18 +31,25 @@ def scan_target(target_path: str) -> dict:
         "remediations": []
     }
 
-    # Placeholder: Detect code vs container
     if target_path.endswith(".py") or target_path.endswith(".py/"):
-        # Code scan (Bandit placeholder)
-        result["total_findings"] = 2
-        result["severity_breakdown"]["MEDIUM"] = 1
-        result["severity_breakdown"]["LOW"] = 1
-        result["findings"] = [
-            {"vulnerability": "Possible hard coded password", "severity": "LOW", "confidence_score": calculate_confidence("LOW")},
-            {"vulnerability": "Use of exec detected", "severity": "MEDIUM", "confidence_score": calculate_confidence("MEDIUM")}
-        ]
+        # Real Bandit call
+        cmd = ["bandit", "-r", target_path, "-f", "json", "--quiet"]
+        try:
+            proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            bandit_output = json.loads(proc.stdout)
+            issues = bandit_output.get("results", [])
+            result["total_findings"] = len(issues)
+            for issue in issues:
+                result["findings"].append({
+                    "vulnerability": issue["issue_text"],
+                    "severity": issue["issue_severity"],
+                    "confidence_score": calculate_confidence(issue["issue_severity"]),
+                    "line": issue["line_number"]
+                })
+        except Exception as e:
+            result["error"] = str(e)
     else:
-        # Container scan (Trivy placeholder)
-        result["total_findings"] = 0
+        # Container scan handled by container_scanner.py
+        result["total_findings"] = 0  # Placeholder until integrated
 
     return result
