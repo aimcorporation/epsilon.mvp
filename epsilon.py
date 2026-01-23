@@ -13,7 +13,7 @@ from remediator import generate_remediations
 from pqc_encrypt import encrypt_report
 
 @click.command()
-@click.argument("target", type=str)  # str so container names work
+@click.argument("target", type=str)
 @click.option("--output", "-o", type=click.Choice(["json", "pretty"]), default="pretty", help="Output format")
 @click.option("--remediate", "-r", is_flag=True, help="Show only remediation suggestions")
 def epsilon(target: str, output: str, remediate: bool = False) -> None:
@@ -29,12 +29,12 @@ def epsilon(target: str, output: str, remediate: bool = False) -> None:
     try:
         result = scan_target(target)
 
-        # PQC encryption
+        # PQC encryption on full result
         encrypted = encrypt_report(json.dumps(result))
         click.echo(f"Encrypted Report (Quantum-Resistant): {encrypted}")
 
         if remediate:
-            findings = result.get("findings", [])
+            findings = result.get("findings", []) or result.get("vulnerabilities", [])
             remediations = generate_remediations(findings)
             click.echo("Remediation Suggestions:")
             if not remediations:
@@ -53,12 +53,15 @@ def epsilon(target: str, output: str, remediate: bool = False) -> None:
                 click.echo(json.dumps(result, indent=2))
             else:
                 click.echo(f"Status: {result['status']}")
-                click.echo(f"Total Findings: {result['total_findings']}")
+                click.echo(f"Total Findings: {result.get('total_findings', result.get('total_vulnerabilities', 0))}")
                 click.echo(f"Severity Breakdown: {result['severity_breakdown']}")
-                if result["findings"]:
+                items = result.get("findings", []) or result.get("vulnerabilities", [])
+                if items:
                     click.echo("Findings:")
-                    for f in result["findings"]:
-                        click.echo(f"  - {f['vulnerability']} (Severity: {f['severity']}, Confidence: {f['confidence_score']}/10)")
+                    for item in items:
+                        click.echo(f"  - {item.get('vulnerability', item.get('VulnerabilityID', 'Unknown'))} "
+                                   f"(Severity: {item.get('severity', item.get('Severity', 'UNKNOWN'))}, "
+                                   f"Confidence: {item['confidence_score']}/10)")
                 else:
                     click.echo("No vulnerabilities detected.")
     except Exception as e:
